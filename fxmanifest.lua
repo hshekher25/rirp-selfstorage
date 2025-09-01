@@ -3,7 +3,7 @@ game 'gta5'
 
 name "Self Storage"
 author "Made with love by Samuel#0008"
-version "1.0.0"
+version "1.0.1"
 
 client_scripts {
     'bridge/client.lua',
