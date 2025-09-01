@@ -11,6 +11,9 @@ sd-selfstorage is a comprehensive self-storage rental system for FiveM that allo
 - 🌍 **Multi-Language Support** - Easy localization system
 - 📦 **ox_inventory Integration** - Full stash system with weight and slot limits
 
+## 🤝 Support
+For support, join our [Discord](https://discord.gg/FzPehMQaBQ) or create an issue on GitHub.
+
 ## Preview
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/fd9b534a-89c9-4931-846d-b4d079fa8e7c" />
 
@@ -92,12 +95,6 @@ Banking.RemoveAccountMoney = function(accountId, amount, unitId)
     )
 end
 ```
-
-## 📜 License
-This resource is protected by copyright. Redistribution or modification without permission is prohibited.
-
-## 🤝 Support
-For support, join our [Discord](https://discord.gg/FzPehMQaBQ) or create an issue on GitHub.
 
 
 
