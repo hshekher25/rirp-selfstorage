@@ -1,6 +1,6 @@
 # sd-selfstorage
 
-sd-selfstorage is a comprehensive self-storage rental system for FiveM that allows players to rent or purchase storage units with advanced features including auto-renewal payments, access management, upgrades, and more.
+sd-selfstorage is a comprehensive self-storage rental system for FiveM that allows players to rent or purchase storage units with advanced features including auto-renewal payments, access management (i.e. you can give people access to your unit), upgrades, and more.
 ## Features
 - 🏢 **Rent or Purchase** - Players can either rent units weekly or buy them permanently
 - 💳 **Auto-Renewal System** - Automatic payments from bank accounts (configurable)
