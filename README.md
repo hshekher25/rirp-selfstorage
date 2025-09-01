@@ -37,7 +37,7 @@ Store: [Click Here](https://fivem.samueldev.shop)
 ## 📖 Dependencies
 - [ox_inventory](https://github.com/overextended/ox_inventory)
 - [ox_lib](https://github.com/overextended/ox_lib)
-- [qbx_core](https://github.com/Qbox-project/qbx_core) or [qb-core](https://github.com/qbcore-framework/qb-core)
+- [qbx_core](https://github.com/Qbox-project/qbx_core), [qb-core](https://github.com/qbcore-framework/qb-core) or [es_extended](https://github.com/esx-framework)
 - oxmysql
 
 ## 📖 Configuration
