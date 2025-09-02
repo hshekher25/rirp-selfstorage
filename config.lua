@@ -15,15 +15,16 @@ return {
         { name = 'storageunit13', id = 13, coords = vector3(-71.74, -1207.16, 27.89), length = 5.0, width = 5.4, minZ = 25.94, maxZ = 29.94, heading = 316 },
         { name = 'storageunit14', id = 14, coords = vector3(-78.6, -1205.21, 27.63),  length = 5.0, width = 5.4, minZ = 25.94, maxZ = 29.94, heading = 0 },
     },
-
+    -- Choose inventory system: "ox" or "qs"
+    InventoryType = "qs", -- or "qs"
     Manager = {
-        coords = vec3(-82.63, -1197.53, 27.54), 
-        heading = 87.72,
+        coords = vec3(-62.0060, -1218.3975, 28.7019), 
+        heading = 282.9227,
         model = 'a_m_m_business_01',
-        spawnDistance = 100.0,
+        spawnDistance = 3.0,
         interactDistance = 3.0,
         blip = {
-            enabled = true,
+            enabled = false,
             sprite = 473,
             color = 7,
             scale = 0.7,

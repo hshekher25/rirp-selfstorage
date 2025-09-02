@@ -144,13 +144,49 @@ CreateThread(function()
                         end
                     end
                 end
-                
-                exports.ox_inventory:RegisterStash(stashId, 'Storage Unit #' .. rental.unitId .. ' - ' .. rental.ownerIdentifier:sub(1, 8), slots, weight, rental.ownerIdentifier)
+
+
+                lib.callback.register('storage:registerStash', function(source, stashId, unitId, ownerIdentifier, slots, weight)
+                    local label = 'Storage Unit #' .. unitId .. ' - ' .. ownerIdentifier:sub(1, 8)
+                    RegisterInventoryStash(stashId, label, slots, weight, ownerIdentifier, source)
+                    return true
+                end)
+
+
+
+                -- RegisterInventoryStash(
+                --     stashId,
+                --     'Storage Unit #' .. rental.unitId .. ' - ' .. rental.ownerIdentifier:sub(1, 8),
+                --     slots,
+                --     weight,
+                --     rental.ownerIdentifier
+                -- )
+
+                --exports.ox_inventory:RegisterStash(stashId, 'Storage Unit #' .. rental.unitId .. ' - ' .. rental.ownerIdentifier:sub(1, 8), slots, weight, rental.ownerIdentifier)
             end
         end
         print("^2Loaded " .. #rentals .. " storage rentals")
     end
 end)
+
+function RegisterInventoryStash(stashId, label, slots, weight, owner, source)
+    if Config.InventoryType == "ox" then
+        exports.ox_inventory:RegisterStash(stashId, label, slots, weight, owner)
+
+    elseif Config.InventoryType == "qs" then
+        if not source then
+            print(("^1[ERROR]^7 'source' is required to register stash in qs-inventory for stash: %s"):format(stashId))
+            return
+        end
+        exports['qs-inventory']:RegisterStash(source, stashId, slots, weight)
+        print(("^3[QS]^7 Registered stash: %s (%s slots, %s weight)"):format(stashId, slots, weight))
+
+    else
+        print("^1[ERROR]^7 Invalid InventoryType in config: " .. tostring(Config.InventoryType))
+    end
+end
+
+
 
 --- Update locker data in database
 ---@param unitId number Unit ID to update
@@ -463,7 +499,24 @@ lib.callback.register('storage:rentUnit', function(source, unitId, paymentMethod
     }
     
     local stashId = 'storage_' .. unitId .. '_' .. identifier
-    exports.ox_inventory:RegisterStash(stashId, 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8), Config.DefaultLimits.slots, Config.DefaultLimits.weight, identifier)
+    lib.callback.register('storage:registerStash', function(source, stashId, unitId, identifier)
+    local label = 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8)
+    local slots = Config.DefaultLimits.slots
+    local weight = Config.DefaultLimits.weight
+    local owner = identifier
+
+    RegisterInventoryStash(stashId, label, slots, weight, owner, source)
+    return true
+end)
+
+   -- exports.ox_inventory:RegisterStash(stashId, 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8), Config.DefaultLimits.slots, Config.DefaultLimits.weight, identifier)
+    -- RegisterInventoryStash(
+    --     stashId,
+    --     'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8),
+    --     Config.DefaultLimits.slots,
+    --     Config.DefaultLimits.weight,
+    --     identifier
+    -- )
 
     return true, locale('rent_success', { id = unitId })
 end)
@@ -787,7 +840,24 @@ lib.callback.register('storage:purchaseUnit', function(source, unitId, paymentMe
     }
     
     local stashId = 'storage_' .. unitId .. '_' .. identifier
-    exports.ox_inventory:RegisterStash(stashId, 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8), Config.DefaultLimits.slots, Config.DefaultLimits.weight, identifier)
+     lib.callback.register('storage:registerStash', function(source, stashId, unitId, identifier)
+    local label = 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8)
+    local slots = Config.DefaultLimits.slots
+    local weight = Config.DefaultLimits.weight
+    local owner = identifier
+
+    RegisterInventoryStash(stashId, label, slots, weight, owner, source)
+    return true
+end)
+
+    --exports.ox_inventory:RegisterStash(stashId, 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8), Config.DefaultLimits.slots, Config.DefaultLimits.weight, identifier)
+    -- RegisterInventoryStash(
+    --     stashId,
+    --     'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8),
+    --     Config.DefaultLimits.slots,
+    --     Config.DefaultLimits.weight,
+    --     identifier
+    -- )
 
     return true, locale('purchase_success', { id = unitId })
 end)
@@ -809,7 +879,8 @@ lib.callback.register('storage:deleteUnit', function(source, unitId)
     end
 
     local stashId = 'storage_' .. unitId .. '_' .. identifier
-    exports.ox_inventory:ClearInventory(stashId)
+    --exports.ox_inventory:ClearInventory(stashId)
+    ClearInventoryStash(stashId)
     
     MySQL.query.await('DELETE FROM storage_rentals WHERE lockerIdentifier = ?', { 
         playerRentals[identifier].owned.lockerIdentifier 
@@ -848,6 +919,32 @@ lib.callback.register('storage:deleteUnit', function(source, unitId)
 
     return true, locale('unit_deleted_success')
 end)
+
+function ClearInventoryStash(stashId)
+    if Config.InventoryType == "ox" then
+        local stash = exports.ox_inventory:GetInventory(stashId)
+        if stash then
+            ClearInventoryStash(stashId)
+            print(("^2[OX]^7 Cleared stash: %s"):format(stashId))
+        else
+            print(("^1[OX]^7 Tried to clear non-existent stash: %s"):format(stashId))
+        end
+
+    elseif Config.InventoryType == "qs" then
+       
+        print(("^2[QS]^7 Cleared stash contents from DB for: %s"):format(stashId))
+        exports['qs-inventory']:ClearOtherInventory('stash',stashId)
+        
+
+        MySQL.query('DELETE FROM inventory_stash WHERE stash = ?', { stashId }, function(affectedRows)
+            print(('^3[DEBUG]^7 Deleted %s row(s) for stash ID: %s'):format(affectedRows or 0, stashId))
+        end)
+
+    else
+        print("^1[ERROR]^7 Invalid inventory type configured: " .. tostring(Config.InventoryType))
+    end
+end
+
 
 --- Get payment information for a player
 ---@param source number Player source
@@ -1055,7 +1152,13 @@ lib.callback.register('storage:purchaseUpgrade', function(source, unitId, upgrad
     end
     
     local stashId = 'storage_' .. unitId .. '_' .. identifier
-    exports.ox_inventory:RegisterStash(stashId, 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8), newSlots, newWeight, identifier)
+    --RegisterInventoryStash(stashId, 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8), newSlots, newWeight, identifier)
+   lib.callback.register('storage:registerStash', function(source, stashId, unitId, identifier, newSlots, newWeight)
+    local label = 'Storage Unit #' .. unitId .. ' - ' .. identifier:sub(1, 8)
+    RegisterInventoryStash(stashId, label, newSlots, newWeight, identifier, source)
+    return true
+end)
+
     
     return true, locale('upgrade_purchased', { slots = newSlots, weight = (newWeight/1000) })
 end)
@@ -1148,7 +1251,7 @@ CreateThread(function()
                     
                     if graceEnds and graceEnds <= currentTime then
                         local stashId = 'storage_' .. unitId .. '_' .. ownerIdentifier
-                        exports.ox_inventory:ClearInventory(stashId)
+                        ClearInventoryStash(stashId)
                         
                         MySQL.query.await('DELETE FROM storage_rentals WHERE lockerIdentifier = ?', { rental.lockerIdentifier })
                         

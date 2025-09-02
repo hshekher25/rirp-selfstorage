@@ -669,8 +669,52 @@ end
 --- Open storage menu with all available accesses
 ---@param unitId number Storage unit ID
 ---@return nil
+-- OpenStorageMenu = function(unitId)
+--     ---@param storages table[] List of accessible storages
+--     lib.callback('storage:getUnitAccesses', false, function(storages)
+--         if #storages == 0 then
+--             ShowNotification(locale('no_access_to_unit'), 'error')
+--             return
+--         elseif #storages == 1 then
+--             lib.callback('storage:validateAndOpenStash', false, function(canOpen)
+--                 if canOpen then
+--                     exports.ox_inventory:openInventory('stash', storages[1].stashId)
+--                 else
+--                     ShowNotification(locale('access_denied'), 'error')
+--                 end
+--             end, storages[1].stashId)
+--             return
+--         end
+        
+--         local options = {}
+--         for _, storage in ipairs(storages) do
+--             table.insert(options, {
+--                 title = storage.label,
+--                 description = storage.isOwner and locale('your_personal_storage') or locale('shared_access'),
+--                 icon = storage.isOwner and 'fas fa-crown' or 'fas fa-key',
+--                 onSelect = function()
+--                     lib.callback('storage:validateAndOpenStash', false, function(canOpen)
+--                         if canOpen then
+--                             exports.ox_inventory:openInventory('stash', storage.stashId)
+--                         else
+--                             ShowNotification(locale('access_denied'), 'error')
+--                         end
+--                     end, storage.stashId)
+--                 end
+--             })
+--         end
+        
+--         lib.registerContext({
+--             id = 'storage_access_menu',
+--             title = locale('select_access', { id = unitId }),
+--             options = options
+--         })
+        
+--         lib.showContext('storage_access_menu')
+--     end, unitId)
+-- end
+
 OpenStorageMenu = function(unitId)
-    ---@param storages table[] List of accessible storages
     lib.callback('storage:getUnitAccesses', false, function(storages)
         if #storages == 0 then
             ShowNotification(locale('no_access_to_unit'), 'error')
@@ -678,14 +722,14 @@ OpenStorageMenu = function(unitId)
         elseif #storages == 1 then
             lib.callback('storage:validateAndOpenStash', false, function(canOpen)
                 if canOpen then
-                    exports.ox_inventory:openInventory('stash', storages[1].stashId)
+                    OpenInventoryByType(storages[1].stashId)
                 else
                     ShowNotification(locale('access_denied'), 'error')
                 end
             end, storages[1].stashId)
             return
         end
-        
+
         local options = {}
         for _, storage in ipairs(storages) do
             table.insert(options, {
@@ -695,7 +739,7 @@ OpenStorageMenu = function(unitId)
                 onSelect = function()
                     lib.callback('storage:validateAndOpenStash', false, function(canOpen)
                         if canOpen then
-                            exports.ox_inventory:openInventory('stash', storage.stashId)
+                            OpenInventoryByType(storage.stashId)
                         else
                             ShowNotification(locale('access_denied'), 'error')
                         end
@@ -703,16 +747,29 @@ OpenStorageMenu = function(unitId)
                 end
             })
         end
-        
+
         lib.registerContext({
             id = 'storage_access_menu',
             title = locale('select_access', { id = unitId }),
             options = options
         })
-        
+
         lib.showContext('storage_access_menu')
     end, unitId)
 end
+
+
+function OpenInventoryByType(stashId)
+    if Config.InventoryType == "ox" then
+        exports.ox_inventory:openInventory('stash', stashId)
+    elseif Config.InventoryType == "qs" then
+        TriggerEvent("inventory:client:SetCurrentStash", stashId)
+        TriggerServerEvent("inventory:server:OpenInventory", "stash", stashId)
+    else
+        print("^1[ERROR]^7 Invalid Config.InventoryType. Set it to 'ox' or 'qs'.")
+    end
+end
+
 
 --- Open storage unit (backwards compatibility)
 ---@param unitId number Storage unit ID
